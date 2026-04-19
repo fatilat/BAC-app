@@ -61,7 +61,8 @@
   <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
  </head>
  <body class="h-full">
-  <div id="app" class="h-full w-full overflow-auto bg-white"><!-- Home Screen -->
+  <div id="app" class="h-full w-full overflow-auto bg-white">
+   <!-- Home Screen -->
    <div id="homeScreen" class="min-h-full flex flex-col items-center justify-center p-4" style="background: linear-gradient(135deg, #1a1a2e 0%, #0d0d1a 100%);">
     <div class="text-center fade-up max-w-lg w-full">
      <div class="mb-6">
@@ -92,7 +93,8 @@
     </div>
    </div><!-- Groups Screen -->
    <div id="groupsScreen" class="min-h-full p-4 hidden" style="background: linear-gradient(135deg, #1b4d3e 0%, #0f3d2a 100%);">
-    <div class="max-w-2xl mx-auto pt-6"><button onclick="showHome()" class="flex items-center gap-2 text-white/80 hover:text-white mb-6 transition"> <i data-lucide="arrow-right" style="width:20px;height:20px;"></i> <span>الرئيسية</span> </button>
+    <div class="max-w-2xl mx-auto pt-6">
+     <button onclick="showHome()" class="flex items-center gap-2 text-white/80 hover:text-white mb-6 transition"> <i data-lucide="arrow-right" style="width:20px;height:20px;"></i> <span>الرئيسية</span> </button>
      <h2 class="text-2xl font-bold text-white mb-2">المجموعات</h2>
      <p class="text-white/70 mb-6">أكمل كل مجموعة لفتح التالية</p>
      <div id="groupCards" class="space-y-4"></div>
@@ -100,8 +102,10 @@
    </div><!-- Quiz Screen -->
    <div id="quizScreen" class="min-h-full p-4 hidden" style="background: linear-gradient(135deg, #1b4d3e 0%, #0f3d2a 100%);">
     <div class="max-w-2xl mx-auto pt-6">
-     <div class="flex items-center justify-between mb-4"><button onclick="showGroups()" class="flex items-center gap-2 text-white/80 hover:text-white transition"> <i data-lucide="arrow-right" style="width:20px;height:20px;"></i> <span>المجموعات</span> </button>
-      <div class="flex items-center gap-2 px-4 py-2 rounded-xl" style="background: rgba(255,255,255,0.15);"><span class="text-yellow-300 font-bold" id="quizScore">0</span> <span class="text-white/70">/</span> <span class="text-white/70" id="quizTotal">10</span>
+     <div class="flex items-center justify-between mb-4">
+      <button onclick="showGroups()" class="flex items-center gap-2 text-white/80 hover:text-white transition"> <i data-lucide="arrow-right" style="width:20px;height:20px;"></i> <span>المجموعات</span> </button>
+      <div class="flex items-center gap-2 px-4 py-2 rounded-xl" style="background: rgba(255,255,255,0.15);">
+       <span class="text-yellow-300 font-bold" id="quizScore">0</span> <span class="text-white/70">/</span> <span class="text-white/70" id="quizTotal">10</span>
       </div>
      </div><!-- Progress Bar -->
      <div class="w-full h-3 rounded-full mb-6" style="background: rgba(255,255,255,0.2);">
@@ -114,7 +118,8 @@
       <h3 id="questionText" class="text-lg font-bold mb-5" style="color: #0d4f6b;"></h3>
       <div id="answersContainer" class="space-y-3"></div>
      </div>
-     <div id="feedbackArea" class="mt-4 text-center hidden"><button id="nextBtn" onclick="nextQuestion()" class="quiz-btn px-8 py-3 rounded-xl font-bold text-[#0d4f6b] shadow-lg" style="background: #FFD700;"> السؤال التالي <span style="margin-right:4px;">←</span> </button>
+     <div id="feedbackArea" class="mt-4 text-center hidden">
+      <button id="nextBtn" onclick="nextQuestion()" class="quiz-btn px-8 py-3 rounded-xl font-bold text-[#0d4f6b] shadow-lg" style="background: #FFD700;"> السؤال التالي <span style="margin-right:4px;">←</span> </button>
      </div>
     </div>
    </div><!-- Results Screen -->
@@ -134,7 +139,8 @@
       </div>
       <div id="starsContainer" class="flex justify-center gap-2 mt-4"></div>
      </div>
-     <div class="flex flex-col gap-3"><button onclick="retryGroup()" class="quiz-btn px-8 py-3 rounded-xl font-bold text-[#0d4f6b]" style="background: #FFD700;">إعادة المحاولة 🔄</button> <button onclick="showGroups()" class="quiz-btn px-8 py-3 rounded-xl font-bold text-white border-2 border-white/30 hover:bg-white/10">المجموعات</button>
+     <div class="flex flex-col gap-3">
+      <button onclick="retryGroup()" class="quiz-btn px-8 py-3 rounded-xl font-bold text-[#0d4f6b]" style="background: #FFD700;">إعادة المحاولة 🔄</button> <button onclick="showGroups()" class="quiz-btn px-8 py-3 rounded-xl font-bold text-white border-2 border-white/30 hover:bg-white/10">المجموعات</button>
      </div>
     </div>
    </div>
@@ -142,16 +148,16 @@
   <script>
   // All questions data
   const allQuestions = [
-    {q:"كم تبلغ مساحة الجزائر الإجمالية؟", opts:["2.381.741 كلم²","1.500.000 كلم²","2.100.000 كلم²"], correct:0},
-    {q:"ما هي أعلى قمة جبلية في الجزائر؟", opts:["قمة تاهات بآتاكور","قمة لالة خديجة","قمة الشريعة"], correct:0},
-    {q:"ما هو طول الشريط الساحلي الجزائري؟", opts:["1000 كلم","1200 كلم","1600 كلم"], correct:1},
-    {q:"أي من الأقاليم التالية يغطي 84% من مساحة الجزائر؟", opts:["إقليم التل","إقليم الهضاب العليا","الإقليم الصحراوي"], correct:2},
-    {q:'ما هو "عرق إيغيدي"؟', opts:["سهل ساحلي خصيب","كثبان رملية واسعة","هضبة صخرية"], correct:1},
-    {q:"بماذا يتميز المناخ المتوسطي في شمال الجزائر؟", opts:["حار جاف صيفاً، دافئ ممطر شتاءً","شديد البرودة طوال العام","أمطار غزيرة صيفاً وشتاءً"], correct:0},
-    {q:"ما هو الخط الذي يمر بالقرب من مدينة مستغانم ويعتبر مرجعاً زمنياً؟", opts:["خط الاستواء","خط غرينتش","مدار السرطان"], correct:1},
-    {q:'ما هي "الرقوق" في الصحراء؟', opts:["جبال بركانية","سهول مغطاة بالحصى والرمل الخشن","أودية جافة"], correct:1},
-    {q:"ما هو المدار الذي يمر بجنوب الجزائر؟", opts:["مدار الجدي","مدار السرطان","خط الاستواء"], correct:1},
-    {q:'أين تقع "سلسلة الأطلس التلي"؟', opts:["في أقصى الجنوب","بمحاذاة الشريط الساحلي شمالاً","بين الهضاب والصحراء"], correct:1},
+    {q:"كم تبلغ مساحة الجزائر الإجمالية؟", opts:["1.500.000 كلم²","2.381.741 كلم²","2.100.000 كلم²"], correct:1},
+    {q:"ما هي أعلى قمة جبلية في الجزائر؟", opts:["قمة لالة خديجة","قمة تاهات بآتاكور","قمة الشريعة"], correct:1},
+    {q:"ما هو طول الشريط الساحلي الجزائري؟", opts:["1000 كلم","1600 كلم","1200 كلم"], correct:2},
+    {q:"أي من الأقاليم التالية يغطي 84% من مساحة الجزائر؟", opts:["إقليم التل","الإقليم الصحراوي","إقليم الهضاب العليا"], correct:1},
+    {q:'ما هو "عرق إيغيدي"؟', opts:["سهل ساحلي خصيب","هضبة صخرية","كثبان رملية واسعة"], correct:2},
+    {q:"بماذا يتميز المناخ المتوسطي في شمال الجزائر؟", opts:["شديد البرودة طوال العام","حار جاف صيفاً، دافئ ممطر شتاءً","أمطار غزيرة صيفاً وشتاءً"], correct:1},
+    {q:"ما هو الخط الذي يمر بالقرب من مدينة مستغانم ويعتبر مرجعاً زمنياً؟", opts:["خط الاستواء","مدار السرطان","خط غرينتش"], correct:2},
+    {q:'ما هي "الرقوق" في الصحراء؟', opts:["جبال بركانية","أودية جافة","سهول مغطاة بالحصى والرمل الخشن"], correct:2},
+    {q:"ما هو المدار الذي يمر بجنوب الجزائر؟", opts:["مدار الجدي","خط الاستواء","مدار السرطان"], correct:2},
+    {q:'أين تقع "سلسلة الأطلس التلي"؟', opts:["في أقصى الجنوب","بين الهضاب والصحراء","بمحاذاة الشريط الساحلي شمالاً"], correct:2},
     {q:"ما هو أطول وادي في الجزائر؟", opts:["وادي الصومام","وادي الشلف","وادي سيبوس"], correct:1},
     {q:"بماذا تعرف الجبال في منطقة الهقار؟", opts:["جبال كلسية حديثة","جبال بركانية قديمة","تلال رملية"], correct:1},
     {q:'ما هي "الشطوط"؟', opts:["غابات كثيفة","منخفضات ملحية تمتلئ بالماء شتاءً","جبال شاهقة"], correct:1},
@@ -660,5 +666,5 @@
   updateHomeStats();
   lucide.createIcons();
 </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9eee9551f5295633',t:'MTc3NjYyOTc0OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9eeec17895a8a0ec',t:'MTc3NjYzMTU1Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
