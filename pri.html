@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="ar" dir="rtl" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { kufi: ['Noto Kufi Arabic', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { font-family: 'Noto Kufi Arabic', sans-serif; }
+    .quiz-btn { transition: all 0.25s ease; }
+    .quiz-btn:hover:not(:disabled) { transform: translateY(-2px); }
+    .correct-answer { animation: correctPulse 0.5s ease; }
+    .wrong-answer { animation: shake 0.4s ease; }
+    @keyframes correctPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+      100% { transform: scale(1); }
+    }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.4s ease forwards; }
+    .progress-fill { transition: width 0.5s ease; }
+    .group-card { transition: all 0.3s ease; }
+    .group-card:hover:not(.locked) { transform: translateY(-4px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+    .star { animation: starPop 0.3s ease forwards; }
+    @keyframes starPop {
+      0% { transform: scale(0) rotate(0deg); opacity:0; }
+      60% { transform: scale(1.3) rotate(15deg); opacity:1; }
+      100% { transform: scale(1) rotate(0deg); opacity:1; }
+    }
+    .confetti-piece {
+      position: fixed;
+      width: 10px; height: 10px;
+      animation: confettiFall 2s ease forwards;
+      z-index: 100;
+    }
+    @keyframes confettiFall {
+      0% { transform: translateY(-100%) rotate(0deg); opacity:1; }
+      100% { transform: translateY(100%) rotate(720deg); opacity:0; }
+    }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full">
+  <div id="app" class="h-full w-full overflow-auto bg-white"><!-- Home Screen -->
+   <div id="homeScreen" class="min-h-full flex flex-col items-center justify-center p-4" style="background: linear-gradient(135deg, #1a1a2e 0%, #0d0d1a 100%);">
+    <div class="text-center fade-up max-w-lg w-full">
+     <div class="mb-6">
+      <div class="w-24 h-24 mx-auto rounded-2xl flex items-center justify-center text-5xl" style="background: #FFD700;">
+       📚
+      </div>
+     </div>
+     <h1 id="mainTitle" class="text-3xl md:text-4xl font-extrabold text-white mb-3">اختبر معلوماتك - بكالوريا</h1>
+     <p class="text-white/80 text-lg mb-8">أسئلة في التربية الإسلامية والمدنية والتاريخ والجغرافيا</p>
+     <div id="homeStats" class="flex justify-center gap-4 mb-8">
+      <div class="rounded-xl px-5 py-3 text-center" style="background: rgba(255,255,255,0.15); backdrop-filter: blur(8px);">
+       <div class="text-2xl font-bold text-yellow-300" id="totalScore">
+        0
+       </div>
+       <div class="text-white/70 text-sm">
+        النقاط
+       </div>
+      </div>
+      <div class="rounded-xl px-5 py-3 text-center" style="background: rgba(255,255,255,0.15); backdrop-filter: blur(8px);">
+       <div class="text-2xl font-bold text-yellow-300" id="completedGroups">
+        0/4
+       </div>
+       <div class="text-white/70 text-sm">
+        المواد
+       </div>
+      </div>
+     </div><button onclick="showGroups()" class="quiz-btn px-10 py-4 rounded-2xl text-xl font-bold text-[#0d4f6b] shadow-lg" style="background: #FFD700;"> ابدأ الاختبار ✨ </button>
+    </div>
+   </div><!-- Groups Screen -->
+   <div id="groupsScreen" class="min-h-full p-4 hidden" style="background: linear-gradient(135deg, #1b4d3e 0%, #0f3d2a 100%);">
+    <div class="max-w-2xl mx-auto pt-6"><button onclick="showHome()" class="flex items-center gap-2 text-white/80 hover:text-white mb-6 transition"> <i data-lucide="arrow-right" style="width:20px;height:20px;"></i> <span>الرئيسية</span> </button>
+     <h2 class="text-2xl font-bold text-white mb-2">المواد</h2>
+     <p class="text-white/70 mb-6">اختر المادة واختبر معلوماتك</p>
+     <div id="groupCards" class="space-y-4"></div>
+    </div>
+   </div><!-- Quiz Screen -->
+   <div id="quizScreen" class="min-h-full p-4 hidden" style="background: linear-gradient(135deg, #1b4d3e 0%, #0f3d2a 100%);">
+    <div class="max-w-2xl mx-auto pt-6">
+     <div class="flex items-center justify-between mb-4"><button onclick="showGroups()" class="flex items-center gap-2 text-white/80 hover:text-white transition"> <i data-lucide="arrow-right" style="width:20px;height:20px;"></i> <span>المواد</span> </button>
+      <div class="flex items-center gap-2 px-4 py-2 rounded-xl" style="background: rgba(255,255,255,0.15);"><span class="text-yellow-300 font-bold" id="quizScore">0</span> <span class="text-white/70">/</span> <span class="text-white/70" id="quizTotal">20</span>
+      </div>
+     </div><!-- Progress Bar -->
+     <div class="w-full h-3 rounded-full mb-6" style="background: rgba(255,255,255,0.2);">
+      <div id="progressBar" class="h-full rounded-full progress-fill" style="background: #FFD700; width: 0%;"></div>
+     </div>
+     <div class="text-white/60 text-sm mb-2" id="questionCounter">
+      السؤال 1 من 20
+     </div>
+     <div id="questionCard" class="rounded-2xl p-6 shadow-xl fade-up" style="background: rgba(255,255,255,0.95);">
+      <h3 id="questionText" class="text-lg font-bold mb-5" style="color: #0d4f6b;"></h3>
+      <div id="answersContainer" class="space-y-3"></div>
+     </div>
+     <div id="feedbackArea" class="mt-4 text-center hidden"><button id="nextBtn" onclick="nextQuestion()" class="quiz-btn px-8 py-3 rounded-xl font-bold text-[#0d4f6b] shadow-lg" style="background: #FFD700;"> السؤال التالي <span style="margin-right:4px;">←</span> </button>
+     </div>
+    </div>
+   </div><!-- Results Screen -->
+   <div id="resultsScreen" class="min-h-full flex flex-col items-center justify-center p-4 hidden">
+    <div class="max-w-lg w-full text-center fade-up">
+     <div id="resultsEmoji" class="text-7xl mb-4">
+      🎉
+     </div>
+     <h2 class="text-3xl font-extrabold text-white mb-2" id="resultsTitle">أحسنت!</h2>
+     <p class="text-white/80 text-lg mb-6" id="resultsDesc"></p>
+     <div class="rounded-2xl p-6 mb-6" style="background: rgba(255,255,255,0.15); backdrop-filter: blur(8px);">
+      <div class="text-5xl font-extrabold text-yellow-300 mb-1" id="resultScore">
+       0/20
+      </div>
+      <div class="text-white/70">
+       إجابة صحيحة
+      </div>
+      <div id="starsContainer" class="flex justify-center gap-2 mt-4"></div>
+     </div>
+     <div class="flex flex-col gap-3"><button onclick="retryGroup()" class="quiz-btn px-8 py-3 rounded-xl font-bold text-[#0d4f6b]" style="background: #FFD700;">إعادة المحاولة 🔄</button> <button onclick="showGroups()" class="quiz-btn px-8 py-3 rounded-xl font-bold text-white border-2 border-white/30 hover:bg-white/10">المواد</button>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+  // Shuffle array function
+  function shuffleArray(arr) {
+    const shuffled = [...arr];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  }
+
+  // Create question object with shuffled answers
+  function createQuestion(q, opts, correctIndex) {
+    const answers = opts.map((text, idx) => ({ text, isCorrect: idx === correctIndex }));
+    const shuffled = shuffleArray(answers);
+    return {
+      q,
+      opts: shuffled.map(a => a.text),
+      correct: shuffled.findIndex(a => a.isCorrect)
+    };
+  }
+
+  // All questions data
+  const allQuestions = {
+    "التربية الإسلامية": [
+      createQuestion("في سورة الغاشية، معنى كلمة 'ضريع' هو:", ["طعام طيب", "نوع من الشوك المر", "ماء بارد"], 1),
+      createQuestion("أولو العزم من الرسل هم الذين:", ["صمدوا وصبروا على أذى قومهم", "عاشوا في زمن واحد", "لم يواجهوا صعوبات في الدعوة"], 0),
+      createQuestion("من آداب المسجد عند الدخول إليه:", ["اللعب مع الأصدقاء", "صلاة ركعتين تحية المسجد", "رفع الصوت بالحديث"], 1),
+      createQuestion("الصحابي الذي كان أول مؤذن في الإسلام هو:", ["عمر بن الخطاب", "بلال بن رباح", "علي بن أبي طالب"], 1),
+      createQuestion("صلة الرحم تعني:", ["زيارة الأقارب والإحسان إليهم", "الابتعاد عن الجيران", "السفر إلى بلاد بعيدة"], 0),
+      createQuestion("معنى 'نمارق مصفوفة' في سورة الغاشية:", ["وسائد مرتبة", "سجاد ملون", "كؤوس فارغة"], 0),
+      createQuestion("الرسول الذي صبر على فقدان بصره وولده:", ["يوسف", "يعقوب", "داود"], 1),
+      createQuestion("من أولي العزم الذي بنى السفينة:", ["نوح", "إبراهيم", "موسى"], 0),
+      createQuestion("حكم صلاة الجماعة في المسجد:", ["واجبة", "فضلها عظيم", "ممنوعة"], 1),
+      createQuestion("الإحسان إلى الجار من علامات:", ["الخوف", "الإيمان", "الضعف"], 1),
+      createQuestion("ماذا نقول عند دخول المسجد:", ["اللهم افتح لي أبواب رحمتك", "السلام عليكم بصوت عالٍ", "باسم الله خرجنا"], 0),
+      createQuestion("سورة الضحى نزلت لتبشير النبي بـ:", ["انقطاع الوحي", "أن ربه لم يودعه ولم يقله", "الهجرة"], 1),
+      createQuestion("معنى 'عائلة' في سورة الضحى:", ["غني", "فقيراً", "يتيماً"], 1),
+      createQuestion("من هو كليم الله من الرسل:", ["عيسى", "موسى", "محمد"], 1),
+      createQuestion("الصحابة هم الذين:", ["رأوا النبي وآمنوا به", "عاشوا بعد النبي", "حاربوا النبي"], 0),
+      createQuestion("رتبة بلال بن رباح في الإسلام:", ["قائد جيش", "مؤذن الرسول", "كاتب الوحي"], 1),
+      createQuestion("عاقبة المتقين في الآخرة:", ["الجوع", "جنة ناعمة", "العمل الشاق"], 1),
+      createQuestion("من آداب الطريق:", ["رمي الأوساخ", "رد السلام", "الجلوس وسط الطريق"], 1),
+      createQuestion("نبي الله إبراهيم هو:", ["أبو الأنبياء", "خاتم الأنبياء", "أول الرسل"], 0),
+      createQuestion("الزكاة ركن من أركان:", ["الإيمان", "الإسلام", "الإحسان"], 1),
+    ],
+    "التربية المدنية": [
+      createQuestion("من مهام مؤسسة البريد والمواصلات:", ["علاج المرضى", "توزيع الرسائل والطرود", "بناء المدارس"], 1),
+      createQuestion("رقم الهاتف الخاص بالحماية المدنية هو:", ["14", "17", "1548"], 0),
+      createQuestion("تعتبر المستشفى مؤسسة عمومية:", ["إنتاجية", "خدمية", "تجارية"], 1),
+      createQuestion("من واجبنا نحو المرافق العمومية:", ["تخريبها والكتابة على جدرانها", "المحافظة عليها لأنها ملك للجميع", "تجاهلها وعدم الاهتمام بنظافتها"], 1),
+      createQuestion("تُقدم الحماية المدنية المساعدة في حالات:", ["الحرائق والحوادث", "بيع المواد الغذائية", "تنظيم حركة المرور فقط"], 0),
+      createQuestion("رمز الحماية المدنية هو:", ["الهلال الأحمر", "النخلة والدرع", "السماعة الطبية"], 1),
+      createQuestion("الرقم الأخضر للشرطة الجزائرية:", ["14", "1548", "1055"], 1),
+      createQuestion("المؤسسة التي نشتري منها الطوابع:", ["البلدية", "البريد", "المدرسة"], 1),
+      createQuestion("الدرك الوطني يتدخل غالباً في:", ["المدن الكبرى", "المناطق الريفية والطرق", "داخل البيوت"], 1),
+      createQuestion("خدمة 'أثير' تابعة لـ:", ["الكهرباء", "اتصالات الجزائر", "المياه"], 1),
+      createQuestion("الرقم 1055 يخص:", ["الإسعاف", "الدرك الوطني", "الإطفاء"], 1),
+      createQuestion("تعتبر الحديقة العامة مرفقاً:", ["خاصاً", "عمومياً", "تجارياً"], 1),
+      createQuestion("من مخاطر سوء استخدام التكنولوجيا:", ["إضاعة الوقت", "سرعة التواصل", "التعلم"], 0),
+      createQuestion("مرفق يساهم في محو الأمية:", ["البريد", "المدرسة", "الحماية المدنية"], 1),
+      createQuestion("البطاقة الذهبية تُستخدم لـ:", ["العلاج", "سحب الأموال", "السفر"], 1),
+      createQuestion("المؤسسة الإنتاجية هي التي:", ["تقدم خدمات فقط", "تنتج سلعاً", "تحمي المواطن"], 1),
+      createQuestion("صيانة المرافق العمومية هي مسؤولية:", ["الدولة فقط", "المواطن والدولة", "الأطفال فقط"], 1),
+      createQuestion("الخدمات البريدية تساهم في:", ["تربية الحيوان", "تسهيل حياة المواطن", "بناء الطرق"], 1),
+      createQuestion("المعلم في المدرسة يقدم خدمة:", ["مادية", "معنوية تعليمية", "تجارية"], 1),
+      createQuestion("عند وقوع زلزال نتصل بـ:", ["البلدية", "الحماية المدنية", "مكتب البريد"], 1),
+    ],
+    "التاريخ": [
+      createQuestion("القائد المسلم الذي بنى مدينة القيروان هو:", ["طارق بن زياد", "عقبة بن نافع", "حسان بن النعمان"], 1),
+      createQuestion("دام الفتح الإسلامي لبلاد المغرب حوالي:", ["10 سنوات", "70 سنة", "200 سنة"], 1),
+      createQuestion("قبل الإسلام، كانت بلاد المغرب تحت حكم:", ["الفرس", "البيزنطيين (الروم)", "اليونان"], 1),
+      createQuestion("اتخذ الفاتحون المسلمون من مدينة القيروان:", ["مركزاً لانطلاق الفتوحات", "مكاناً للتجارة فقط", "ميناءً للسفن الحربية"], 0),
+      createQuestion("من نتائج الفتح الإسلامي لشمال أفريقيا:", ["انتشار اللغة العربية والإسلام", "بقاء التبعية للروم", "عزل المنطقة عن العالم"], 0),
+      createQuestion("فتح الأندلس كان بقيادة:", ["عقبة بن نافع", "طارق بن زياد", "أبو المهاجر دينار"], 1),
+      createQuestion("المدينة التي كانت عاصمة الروم في المغرب:", ["القيروان", "قرطاج", "تيمقاد"], 1),
+      createQuestion("استغرق فتح بلاد المغرب وقتاً طويلاً بسبب:", ["صعوبة التضاريس ومقاومة الروم", "قلة الجيش", "عدم الرغبة"], 0),
+      createQuestion("أول مدينة بناها المسلمون في المغرب الأوسط (الجزائر):", ["تهرت", "وهران", "الجزائر العاصمة"], 0),
+      createQuestion("القائد الذي فتح مصر هو:", ["عمر بن الخطاب", "عمرو بن العاص", "خالد بن الوليد"], 1),
+      createQuestion("الجامع الذي بناه عقبة بن نافع يوجد في:", ["الجزائر", "تونس", "المغرب"], 1),
+      createQuestion("دخل الإسلام إلى شمال أفريقيا في القرن:", ["الأول هجري", "الخامس هجري", "العاشر هجري"], 0),
+      createQuestion("تحولت بلاد المغرب بعد الفتح إلى:", ["ولاية تابعة للروم", "ولاية إسلامية", "مملكة مستقلة"], 1),
+      createQuestion("اشتهر طارق بن زياد بعبور مضيق:", ["جبل طارق", "السويس", "باب المندب"], 0),
+      createQuestion("نشر الإسلام في المغرب أدى إلى:", ["الصراعات الدائمة", "الوحدة والاستقرار", "الفقر"], 1),
+      createQuestion("كان الروم يظلمون سكان المغرب بفرض:", ["التعليم الإجباري", "الضرائب الباهظة", "الزراعة"], 1),
+      createQuestion("موقع معركة سبيطلة يوجد حالياً في:", ["المغرب", "تونس", "ليبيا"], 1),
+      createQuestion("القائد الذي خلف عقبة بن نافع هو:", ["أبو المهاجر دينار", "طارق بن زياد", "المعز لدين الله"], 0),
+      createQuestion("أصبحت اللغة الرسمية بعد الفتح هي:", ["اللاتينية", "العربية", "الفرنسية"], 1),
+      createQuestion("استنجد سكان المغرب بالمسلمين للتخلص من:", ["الفرس", "الروم البيزنطيين", "الوندال"], 1),
+    ],
+    "الجغرافيا": [
+      createQuestion("من أمثلة الموارد الطبيعية غير المتجددة:", ["الطاقة الشمسية", "البترول والغاز", "الرياح"], 1),
+      createQuestion("المقصود بالتصحر هو:", ["زراعة الأشجار بكثرة", "زحف الرمال وتحول الأراضي لصحراء", "هطول الأمطار الغزيرة"], 1),
+      createQuestion("تعتبر الطاقة المستمدة من الشمس طاقة:", ["ملوثة للبيئة", "نظيفة ومتجددة", "نادرة الوجود"], 1),
+      createQuestion("من المخاطر الكبرى التي تهدد شمال الجزائر:", ["الزلازل", "الجفاف الشديد الدائم", "البراكين النشطة"], 0),
+      createQuestion("للحفاظ على البيئة يجب علينا:", ["حرق الغابات", "فرز النفايات وإعادة تدويرها", "رمي الأوساخ في الشوارع"], 1),
+      createQuestion("الجزائر بلد غني بـ:", ["الموز", "المحروقات كالبترول", "الجليد"], 1),
+      createQuestion("من مصادر الطاقة غير الملوثة:", ["الفحم", "الرياح", "البنزين"], 1),
+      createQuestion("يتم استخراج الغاز الطبيعي في الجزائر من:", ["حاسي مسعود", "حاسي رمل", "وهران"], 1),
+      createQuestion("لحماية التربية من الانجراف نقوم بـ:", ["قطع الأشجار", "التشجير", "حرق العشب"], 1),
+      createQuestion("يعتبر الحديد من الموارد:", ["المتجددة", "المعدنية غير المتجددة", "النباتية"], 1),
+      createQuestion("أكبر منجم للحديد في الجزائر هو:", ["غار جبيلات", "القنطرة", "تمنراست"], 0),
+      createQuestion("النفايات الخضراء هي:", ["البلاستيك", "بقايا الخضر والفواكه", "البطاريات"], 1),
+      createQuestion("إعادة التدوير تعني:", ["رمي النفايات", "تحويل النفايات لمواد مفيدة", "حرق النفايات"], 1),
+      createQuestion("تتساقط الأمطار بكثرة في الجزائر في جهة:", ["الجنوب", "الشمال", "الغرب الصحراوي"], 1),
+      createQuestion("من الموارد المتجددة الدائمة:", ["الشمس", "الفوسفات", "الغاز"], 0),
+      createQuestion("ظاهرة زحف الرمال تهدد:", ["البحار", "الأراضي الزراعية", "الجبال العالية"], 1),
+      createQuestion("يستخدم السد في:", ["توليد الكهرباء وتخزين الماء", "السفر", "استخراج البترول"], 0),
+      createQuestion("الهواء النقي يتوفر بكثرة في:", ["المصانع", "الغابات والريف", "وسط المدن المزدحمة"], 1),
+      createQuestion("الاستغلال العشوائي للموارد يؤدي لـ:", ["الازدهار", "نفادها وتلوث البيئة", "زيادتها"], 1),
+      createQuestion("يتم نقل البترول عبر:", ["أنابيب ضخمة", "الشاحنات الصغيرة", "الطائرات"], 0),
+    ]
+  };
+
+  const groups = [
+    { name: "التربية الإسلامية", icon: "📖", desc: "أسئلة في الشريعة والأنبياء والآداب", questions: allQuestions["التربية الإسلامية"] },
+    { name: "التربية المدنية", icon: "🏛️", desc: "المؤسسات والخدمات العمومية", questions: allQuestions["التربية المدنية"] },
+    { name: "التاريخ", icon: "⚔️", desc: "الفتح الإسلامي والقادة الأوائل", questions: allQuestions["التاريخ"] },
+    { name: "الجغرافيا", icon: "🌍", desc: "الموارد الطبيعية والبيئة", questions: allQuestions["الجغرافيا"] },
+  ];
+
+  let state = {
+    currentGroup: 0,
+    currentQ: 0,
+    score: 0,
+    answered: false,
+    groupScores: [0, 0, 0, 0],
+    groupCompleted: [false, false, false, false],
+    totalScore: 0
+  };
+
+  try {
+    const saved = localStorage.getItem('bac_subjects_state');
+    if (saved) {
+      const s = JSON.parse(saved);
+      state.groupScores = s.groupScores || [0, 0, 0, 0];
+      state.groupCompleted = s.groupCompleted || [false, false, false, false];
+      state.totalScore = s.totalScore || 0;
+    }
+  } catch(e) {}
+
+  function saveState() {
+    localStorage.setItem('bac_subjects_state', JSON.stringify({
+      groupScores: state.groupScores,
+      groupCompleted: state.groupCompleted,
+      totalScore: state.totalScore
+    }));
+  }
+
+  function showScreen(id) {
+    ['homeScreen', 'groupsScreen', 'quizScreen', 'resultsScreen'].forEach(s => {
+      document.getElementById(s).classList.toggle('hidden', s !== id);
+    });
+  }
+
+  function showHome() {
+    updateHomeStats();
+    showScreen('homeScreen');
+  }
+
+  function updateHomeStats() {
+    document.getElementById('totalScore').textContent = state.totalScore;
+    const done = state.groupCompleted.filter(Boolean).length;
+    document.getElementById('completedGroups').textContent = done + '/4';
+  }
+
+  function showGroups() {
+    const container = document.getElementById('groupCards');
+    container.innerHTML = '';
+    groups.forEach((g, i) => {
+      const unlocked = i === 0 || state.groupCompleted[i - 1];
+      const completed = state.groupCompleted[i];
+      const card = document.createElement('div');
+      card.className = `group-card rounded-2xl p-5 flex items-center gap-4 cursor-pointer ${!unlocked ? 'locked opacity-60' : ''}`;
+      card.style.background = completed ? 'rgba(255,215,0,0.2)' : 'rgba(255,255,255,0.12)';
+      card.style.border = completed ? '2px solid #FFD700' : '2px solid rgba(255,255,255,0.1)';
+      card.style.backdropFilter = 'blur(8px)';
+
+      card.innerHTML = `
+        <div class="text-4xl w-16 h-16 rounded-xl flex items-center justify-center shrink-0" style="background:${unlocked ? 'rgba(255,215,0,0.2)' : 'rgba(255,255,255,0.1)'}">
+          ${unlocked ? g.icon : '🔒'}
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2">
+            <h3 class="font-bold text-white text-lg">${g.name}</h3>
+            ${completed ? '<span class="text-yellow-300 text-sm">✓ مكتملة</span>' : ''}
+          </div>
+          <p class="text-white/60 text-sm mt-1">${g.desc}</p>
+          ${completed ? `<p class="text-yellow-300 text-sm mt-1">النتيجة: ${state.groupScores[i]}/20</p>` : ''}
+        </div>
+      `;
+
+      if (unlocked) {
+        card.onclick = () => startGroup(i);
+      }
+      container.appendChild(card);
+    });
+    showScreen('groupsScreen');
+    lucide.createIcons();
+  }
+
+  function startGroup(index) {
+    state.currentGroup = index;
+    state.currentQ = 0;
+    state.score = 0;
+    state.answered = false;
+    document.getElementById('quizTotal').textContent = groups[index].questions.length;
+    showScreen('quizScreen');
+    renderQuestion();
+  }
+
+  function renderQuestion() {
+    const group = groups[state.currentGroup];
+    const q = group.questions[state.currentQ];
+    const total = group.questions.length;
+
+    document.getElementById('questionCounter').textContent = `السؤال ${state.currentQ + 1} من ${total}`;
+    document.getElementById('progressBar').style.width = ((state.currentQ / total) * 100) + '%';
+    document.getElementById('quizScore').textContent = state.score;
+    document.getElementById('questionText').textContent = q.q;
+
+    const container = document.getElementById('answersContainer');
+    container.innerHTML = '';
+    state.answered = false;
+    document.getElementById('feedbackArea').classList.add('hidden');
+
+    const labels = ['أ', 'ب', 'ج'];
+    q.opts.forEach((opt, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'quiz-btn w-full text-right p-4 rounded-xl border-2 border-gray-200 hover:border-[#1a7a8a] transition flex items-center gap-3';
+      btn.style.background = '#f8f9fa';
+      btn.innerHTML = `<span class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 font-bold text-sm" style="background:#e8f4f8;color:#0d4f6b;">${labels[i]}</span><span style="color:#1a1a2e;">${opt}</span>`;
+      btn.onclick = () => selectAnswer(i, btn);
+      container.appendChild(btn);
+    });
+
+    const card = document.getElementById('questionCard');
+    card.classList.remove('fade-up');
+    void card.offsetWidth;
+    card.classList.add('fade-up');
+  }
+
+  function selectAnswer(index, btn) {
+    if (state.answered) return;
+    state.answered = true;
+
+    const q = groups[state.currentGroup].questions[state.currentQ];
+    const isCorrect = index === q.correct;
+    const allBtns = document.getElementById('answersContainer').children;
+
+    for (let i = 0; i < allBtns.length; i++) {
+      allBtns[i].disabled = true;
+      if (i === q.correct) {
+        allBtns[i].style.background = '#d4edda';
+        allBtns[i].style.borderColor = '#28a745';
+        allBtns[i].classList.add('correct-answer');
+      }
+    }
+
+    if (isCorrect) {
+      state.score++;
+      btn.querySelector('span:first-child').textContent = '✓';
+    } else {
+      btn.style.background = '#f8d7da';
+      btn.style.borderColor = '#dc3545';
+      btn.classList.add('wrong-answer');
+      btn.querySelector('span:first-child').textContent = '✗';
+    }
+
+    document.getElementById('quizScore').textContent = state.score;
+
+    const isLast = state.currentQ >= groups[state.currentGroup].questions.length - 1;
+    const nextBtn = document.getElementById('nextBtn');
+    nextBtn.textContent = isLast ? 'عرض النتائج 🏆' : 'السؤال التالي ←';
+    document.getElementById('feedbackArea').classList.remove('hidden');
+  }
+
+  function nextQuestion() {
+    const group = groups[state.currentGroup];
+    if (state.currentQ < group.questions.length - 1) {
+      state.currentQ++;
+      renderQuestion();
+    } else {
+      showResults();
+    }
+  }
+
+  function showResults() {
+    const total = groups[state.currentGroup].questions.length;
+    const score = state.score;
+    const pct = score / total;
+
+    state.groupScores[state.currentGroup] = score;
+    if (pct >= 0.5) {
+      state.groupCompleted[state.currentGroup] = true;
+    }
+    state.totalScore = state.groupScores.reduce((a, b) => a + b, 0);
+    saveState();
+
+    document.getElementById('resultScore').textContent = `${score}/${total}`;
+
+    let emoji, title;
+    if (pct === 1) { emoji = '🏆'; title = 'ممتاز! نتيجة مثالية!'; }
+    else if (pct >= 0.7) { emoji = '🎉'; title = 'أحسنت! أداء رائع!'; }
+    else if (pct >= 0.5) { emoji = '👍'; title = 'جيد! يمكنك التحسن'; }
+    else { emoji = '💪'; title = 'حاول مرة أخرى!'; }
+
+    document.getElementById('resultsEmoji').textContent = emoji;
+    document.getElementById('resultsTitle').textContent = title;
+
+    const passed = pct >= 0.5;
+    document.getElementById('resultsDesc').textContent = passed
+      ? (state.currentGroup < 3 ? 'تم فتح المادة التالية! واصل التقدم 🚀' : 'أكملت جميع المواد! أنت جاهز للبكالوريا 🎓')
+      : 'تحتاج 10 إجابات صحيحة على الأقل لفتح المادة التالية';
+
+    const starsDiv = document.getElementById('starsContainer');
+    starsDiv.innerHTML = '';
+    const starCount = pct >= 0.9 ? 3 : pct >= 0.7 ? 2 : pct >= 0.5 ? 1 : 0;
+    for (let i = 0; i < 3; i++) {
+      const s = document.createElement('span');
+      s.className = 'star text-3xl inline-block';
+      s.style.animationDelay = (i * 0.15) + 's';
+      s.style.opacity = '0';
+      s.textContent = i < starCount ? '⭐' : '☆';
+      s.style.color = i < starCount ? '' : 'rgba(255,255,255,0.3)';
+      starsDiv.appendChild(s);
+    }
+
+    if (pct >= 0.7) spawnConfetti();
+    showScreen('resultsScreen');
+    updateHomeStats();
+  }
+
+  function retryGroup() {
+    startGroup(state.currentGroup);
+  }
+
+  function spawnConfetti() {
+    const colors = ['#FFD700', '#1a7a8a', '#fff', '#2bb5a0', '#ff6b6b'];
+    for (let i = 0; i < 30; i++) {
+      const c = document.createElement('div');
+      c.className = 'confetti-piece';
+      c.style.left = Math.random() * 100 + '%';
+      c.style.top = '-10px';
+      c.style.background = colors[Math.floor(Math.random() * colors.length)];
+      c.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+      c.style.animationDelay = Math.random() * 0.5 + 's';
+      c.style.animationDuration = (1.5 + Math.random()) + 's';
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), 3000);
+    }
+  }
+
+  const defaultConfig = {
+    app_title: 'اختبر معلوماتك - بكالوريا',
+    background_color: '#0d4f6b',
+    surface_color: '#FFD700',
+    text_color: '#ffffff',
+    primary_action_color: '#FFD700',
+    secondary_action_color: '#1a7a8a',
+    font_family: 'Noto Kufi Arabic',
+    font_size: 16
+  };
+
+  function applyConfig(config) {
+    const title = config.app_title || defaultConfig.app_title;
+    document.getElementById('mainTitle').textContent = title;
+
+    const bg = config.background_color || defaultConfig.background_color;
+    const secondary = config.secondary_action_color || defaultConfig.secondary_action_color;
+    const font = config.font_family || defaultConfig.font_family;
+    const size = config.font_size || defaultConfig.font_size;
+
+    document.getElementById('app').style.background = `linear-gradient(135deg, ${bg} 0%, ${secondary} 50%, ${secondary}cc 100%)`;
+
+    document.querySelectorAll('h1,h2,h3,p,span,div,button').forEach(el => {
+      el.style.fontFamily = `${font}, sans-serif`;
+    });
+
+    document.body.style.fontSize = size + 'px';
+  }
+
+  if (window.elementSdk) {
+    window.elementSdk.init({
+      defaultConfig,
+      onConfigChange: async (config) => { applyConfig(config); },
+      mapToCapabilities: (config) => ({
+        recolorables: [
+          { get: () => config.background_color || defaultConfig.background_color, set: (v) => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); } },
+          { get: () => config.surface_color || defaultConfig.surface_color, set: (v) => { config.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); } },
+          { get: () => config.text_color || defaultConfig.text_color, set: (v) => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); } },
+          { get: () => config.primary_action_color || defaultConfig.primary_action_color, set: (v) => { config.primary_action_color = v; window.elementSdk.setConfig({ primary_action_color: v }); } },
+          { get: () => config.secondary_action_color || defaultConfig.secondary_action_color, set: (v) => { config.secondary_action_color = v; window.elementSdk.setConfig({ secondary_action_color: v }); } },
+        ],
+        borderables: [],
+        fontEditable: {
+          get: () => config.font_family || defaultConfig.font_family,
+          set: (v) => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); }
+        },
+        fontSizeable: {
+          get: () => config.font_size || defaultConfig.font_size,
+          set: (v) => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); }
+        }
+      }),
+      mapToEditPanelValues: (config) => new Map([
+        ['app_title', config.app_title || defaultConfig.app_title]
+      ])
+    });
+  }
+
+  updateHomeStats();
+  lucide.createIcons();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9ef55ce566cf9955',t:'MTc3NjcwMDgzNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
